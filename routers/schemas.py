@@ -6,13 +6,16 @@ from pydantic.dataclasses import dataclass
 
 
 @dataclass
-class User:
+class UserSchema:
     id: int
     username: str
-    first_name: str
-    last_name: str
+    first_name: Optional[str]
+    last_name: Optional[str]
     age: int
     created_at: datetime
+
+    class Config:
+        orm_mode = True
 
 
 class UpdateUserSchema(BaseModel):
@@ -27,4 +30,4 @@ class UpdateUserSchema(BaseModel):
 @dataclass
 class UserList:
     count: int
-    users: List[User]
+    users: List[UserSchema]

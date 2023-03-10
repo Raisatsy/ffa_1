@@ -1,20 +1,17 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.future import select
 from starlette.responses import Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from routers.schemas import UserList, User, UpdateUserSchema
+from db.engine import get_async_session
+from db import User
+from routers.schemas import UserList, UserSchema, UpdateUserSchema
 
 
-users = [
-    User(id=1, username='andreq2', first_name='Andrew', last_name='Johns', age=123, created_at=datetime.now()),
-    User(id=2, username='mart13', first_name='Marti', last_name='Fletcher', age=32, created_at=datetime.now()),
-    User(id=3, username='bm32', first_name='Billy', last_name='Murdack', age=83, created_at=datetime.now()),
-
-]
 
 user_router = APIRouter(prefix='/users', tags=['Пользователи'])
-
 
 
 @user_router.get('/', name='Все пользователи', response_model=UserList)
@@ -22,18 +19,20 @@ def get_all_users():
     return UserList(count=len(users), users=users)
 
 
-@user_router.post('/', name='Добавить пользователя', response_model=User)
-def create_user(user: User):
+@user_router.post('/', name='Добавить пользователя', response_model=UserSchema)
+def create_user(user: UserSchema):
     users.append(user)
     return user
 
 
-@user_router.get('/{user_id}', name='Получить пользователя', response_model=User)
-def get_user(user_id: int):
-    for user in users:
-        if user.id == user_id:
-            return user
+@user_router.get('/{user_id}', name='Получить пользователя', response_model=UserSchema)
+async def get_user(user_id: int, session: AsyncSession = Depends(get_async_session)):
+    q = select(User).where(User.id == user_id)
+    user = (await session.execute(q)).scalars().first()
+    if user is not None:
+        return UserSchema.from_orm(user)
     raise HTTPException(status_code=404, detail='User not found')
+
 
 
 @user_router.delete('/{user_id}', name='Удалить пользователя', response_class=Response)
@@ -45,7 +44,7 @@ def delete_user(user_id: int):
     return Response(status_code=204)
 
 
-@user_router.put('/{user_id}', name='Обновить данные пользователя', response_model=User)
+@user_router.put('/{user_id}', name='Обновить данные пользователя', response_model=UserSchema)
 def update_user(user_id: int, new_user_data: UpdateUserSchema):
     for user in users:
         if user.id == user_id:
