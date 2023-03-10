@@ -5,8 +5,7 @@ from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 
-@dataclass
-class UserSchema:
+class UserSchema(BaseModel):
     id: int
     username: str
     first_name: Optional[str]
@@ -27,7 +26,6 @@ class UpdateUserSchema(BaseModel):
     created_at: Optional[datetime]
 
 
-@dataclass
-class UserList:
+class UserList(BaseModel):
     count: int
     users: List[UserSchema]
