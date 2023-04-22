@@ -32,13 +32,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: gunicorn -c gunicorn.conf.py main:app
     env_file:
       - .env
-    ports:
-      - "8000:8000"
     depends_on:
       - db
+
 
   redis:
     image: redis
@@ -59,6 +58,17 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    depends_on:
+      - back
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "80:80"
 
 volumes:
   postgres_data:
