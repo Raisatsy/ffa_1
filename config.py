@@ -1,7 +1,7 @@
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Dict, Any
 
-from pydantic import BaseSettings, PostgresDsn, validator, Field
+from pydantic import BaseSettings, PostgresDsn, validator, Field, RedisDsn
 
 
 class Settings(BaseSettings):
@@ -24,6 +24,23 @@ class Settings(BaseSettings):
             host=values.get('POSTGRES_HOST'),
             port=values.get('POSTGRES_PORT'),
             path=f'/{values.get("POSTGRES_DB")}'
+        )
+
+    REDIS_HOST: str = Field(default='redis')
+    REDIS_PORT: str = Field(default='6379')
+    REDIS_PASSWORD: str = Field(default='secret')
+
+    REDIS_URL: Optional[RedisDsn] = None
+
+    @validator('REDIS_URL', pre=True)
+    def assemble_redis_uri(cls, v: Optional[str], values: Dict[str, Any]):
+        if isinstance(v, str):
+            return v
+        return RedisDsn.build(
+            scheme='redis',
+            host=values.get('REDIS_HOST'),
+            port=values.get('REDIS_PORT'),
+            password=values.get('REDIS_PASSWORD'),
         )
 
 

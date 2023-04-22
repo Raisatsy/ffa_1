@@ -6,26 +6,49 @@ from pydantic.dataclasses import dataclass
 
 
 class UserSchema(BaseModel):
-    id: int
+    id: Optional[int]
     username: str
     first_name: Optional[str]
     last_name: Optional[str]
     age: int
-    created_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
     class Config:
         orm_mode = True
 
 
-class UpdateUserSchema(BaseModel):
-    id: Optional[int]
+class ExtendedUserSchema(UserSchema):
+    notifications: List['NotificationSchema']
+
+    class Config:
+        orm_mode = True
+
+
+class UpdateUserSchema(UserSchema):
     username: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
     age: Optional[str]
-    created_at: Optional[datetime]
 
 
 class UserList(BaseModel):
     count: int
     users: List[UserSchema]
+
+
+class NotificationSchema(BaseModel):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+    message: str
+
+    class Config:
+        orm_mode = True
+
+
+class NotificationList(BaseModel):
+    count: int
+    notifications: List[NotificationSchema]
+
+
+ExtendedUserSchema.update_forward_refs()
